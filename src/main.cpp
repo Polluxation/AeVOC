@@ -45,7 +45,9 @@ WebServer server(80);
 const char wifiInitialApPassword[] = "loving_ct";
 DeviceName devName;
 IotWebConf iotWebConf(devName.get(), &dnsServer, &server, wifiInitialApPassword, CONFIG_VERSION);
-uint8_t matrixBrightness = 50;
+uint8_t matrixBrightness = 8;       // should be <32 if NeoPixel Array has ni dedicated heatsink
+uint16 MeasurementInterval = 1;    // time between measurements [s]
+uint16 NeoPixelUpdateTime = 5;      // Measurement values are shifted to the next NeoPixel column [s]
 
 void setup() {
   Serial.begin(115200);
@@ -150,9 +152,9 @@ void loop() {
   unsigned long now = millis();
   iotWebConf.doLoop();
   loopWifiChecks();
-  if ((now - lastMeasurement) > 1000) {
+  if ((now - lastMeasurement) > MeasurementInterval*1000) {
     measure();
-    if ((now - lastShift) > (3 * 60 * 1000)) {
+    if ((now - lastShift) > (NeoPixelUpdateTime * 1000)) {
       shiftPmMeasurements(maxOf(
         normValue((float) pm25, PM25_MINIMUM, PM25_EXTREME), 
         normValue((float) pm10, PM10_MINIMUM, PM10_EXTREME)));
